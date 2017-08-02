@@ -18,11 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.csdApp.model.Mother;
-/*
- * Przerobic tak ¿eby zapisywa³o siatki do osobnych plików
- * Zastepowanie starych plików lub pytanie czy nadpisaæ
- * 
- */
+
 public class FileManager {
 	private String projectPath;
 	private String dataFileName;
@@ -151,11 +147,7 @@ public class FileManager {
 		    }
 		}
 	}
-	/*
-	 * Ostatecznie nie wiem czy zapis do pliku to koniecznoœæ,
-	 * symulacja nie bêdzie odtwarzana, za duzo bierze pamiêci
-	 * sensowne jest pokazanie w czasie rzeczywistym i tylko wycinka 
-	 */
+	
 	public void saveDataFile(List<Mother> list){
 		FileOutputStream fos = null;
 		ObjectOutputStream oos = null;

@@ -129,7 +129,7 @@ public class Main extends Application {
 		layout.setConstraints(labelDispSim, 0, 7);
 		
 		boxDispSim = new CheckBox();
-		//to be remowed when drawing will work
+		
 		boxDispSim.setDisable(true);
 		layout.setConstraints(boxDispSim, 1, 7);
 		

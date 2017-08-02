@@ -71,7 +71,9 @@ public class Output {
 		vBox.setMinWidth(300);
 		
 		if(dispSim){
-//			buttonClose.setOnAction( e -> window.close();
+			
+			//not implemented yet
+
 		} else {
 			Task<Void> task = new Task<Void>() {
 

@@ -52,7 +52,7 @@ public class Model implements Runnable{
 		simulationInfoGen();
 	}
 	
-	//metoda wype³niaj¹ca siatkê przy uruchomieniu
+
 	public synchronized void innitialNetFill(){
 		for(int i = 0; i < net.length; i++){
 			for(int j = 0; j < net.length; j++){
@@ -65,7 +65,7 @@ public class Model implements Runnable{
 		generationCount++;
 	}
 	
-	//metoda zwracaj¹ca dwa ró¿ne allele z puli alleli
+
 	private Allel[] randomAllelPair(){
 		Allel[] temp = new Allel[2];
 		do{
@@ -75,7 +75,7 @@ public class Model implements Runnable{
 		return temp;
 	}
 	
-	//metoda losuj¹ca allele do zaplemnienia matki
+
 	private Allel[] neighbouringAllels(Mother m, int amount){
 		int x = m.getX();
 		int y = m.getY();
@@ -86,7 +86,6 @@ public class Model implements Runnable{
 		List<Allel> list = new ArrayList<Allel>();
 		
 		if(torus){
-			//z torus
 			for(int i = left; i < right; i++){
 				for(int j = top; j < bottom; j++){
 					if(i == x && j == y){
@@ -114,7 +113,6 @@ public class Model implements Runnable{
 				}
 			}		
 		} else {
-			//bez torus
 			while(left < 0){
 				left++;
 			}
@@ -153,7 +151,7 @@ public class Model implements Runnable{
 		return temp;
 	}
 	
-	//Metoda zbieraj¹ca allele zaplemniajace matkê z s¹siedztwa, generujaca spermPool, przeprowadzaj¹ca slelekcjê zimow¹ oraz wybiera allele dla potomnej matki
+	
 	public Mother[][] fertilisation(){
 		Mother[][] newNet = new Mother[netSideSize][netSideSize];
 		for(int i = 0; i < net.length; i++){
@@ -215,7 +213,8 @@ public class Model implements Runnable{
 		
 		return newNet;
 	}
-//metoda do selecji czy matka prze¿yje zimê
+
+	
 	public boolean winterSelection(Mother m){
 		int selectionFactor;
 		int tempWF = winterFactor;
@@ -235,7 +234,7 @@ public class Model implements Runnable{
 		return true;
 	}
 		
-	//Metoda tworz¹ca pulê starych matek, które mog¹ zaj¹æ puste miejsca na siatce m³odych matek
+	
 	public List<Mother> oldMotherCollector(){
 		List<Mother> tempOldMothers = new ArrayList<>();
 		for(int i = 0; i < netSideSize; i++){
@@ -249,89 +248,6 @@ public class Model implements Runnable{
 	}
 	
 	
-	//Metoda ta tworzy sobie listê starych matek, zapladnia matki w net i pobiera siatkê nowych matek
-	//które zastêpuj¹ stare w siatce. Selekcja na nowych matkach odpowiada selekcji na starych.
-	//Dwie wersje metody netSwitch(): ver1 losuje wolne miejsce w z listy obrebie swojego zasiêgu
-	//ver2 losuje 5x miejsce w swoim zasiegu, jesli trafi w wolne to siada, jesli nie to ginie
-	
-	//ver1
-//	public void netSwitch(){
-//	List<Mother> tempOldMothers = oldMotherCollector();
-//	List<Point> nullList = new ArrayList<>();
-//	Mother[][] tempNewNet = fertilisation();
-//	net = tempNewNet;
-//	
-//	while (tempOldMothers.size() > 0) {
-//		int index = ThreadLocalRandom.current().nextInt(tempOldMothers.size());
-//		Mother tempMother = tempOldMothers.get(index);
-//		int x = tempMother.getX();
-//		int y = tempMother.getY();
-//		int left = x - swarmingDist;
-//		int right = x + swarmingDist;
-//		int top = y - swarmingDist;
-//		int bottom = y + swarmingDist;
-//		
-//		
-//		
-//		//bez torus
-//		while (left < 0) {
-//			left++;
-//		}
-//		while (right > (netSideSize)) {
-//			right--;
-//		}
-//		while (top < 0) {
-//			top++;
-//		}
-//		while (bottom > (netSideSize)) {
-//			bottom--;
-//		}
-//		
-//		
-//		//z torus
-////		for (int i = left; i < right; i++) {
-////			for (int j = top; j < bottom; j++) {
-////				if (i < 0 || i >= netSideSize || j < 0 || j >= netSideSize) {
-////					if(net[getTorusValue(i)][getTorusValue(j)] == null){
-////						nullList.add(new Point(getTorusValue(i), getTorusValue(j)));
-////					}
-////				} else {
-////					if(net[i][j] == null){
-////						nullList.add(new Point(i, j));
-////					}
-////				}
-////			}	
-////		}
-//		
-//		
-//		// bez torus
-//		for (int i = left; i < right; i++) {
-//			for (int j = top; j < bottom; j++) {
-//				if(net[i][j] == null){
-//					nullList.add(new Point(i, j));
-//				}
-//			}	
-//		}
-//		
-//		
-//		if(! nullList.isEmpty()) {
-//			int tempIndex = ThreadLocalRandom.current().nextInt(nullList.size());
-//			Point tempPoint = nullList.get(tempIndex);
-//			int tempX = tempPoint.getX();
-//			int tempY = tempPoint.getY();
-//			tempMother.setX(tempX);
-//			tempMother.setY(tempY);
-//			net[tempX][tempY] = tempMother;
-//			tempOldMothers.remove(index);
-//			nullList.clear();
-//			continue;
-//		} else {
-//			tempOldMothers.remove(index);
-//		}
-//	} 
-//}
-	
-	//ver2
 	public void netSwitch(){
 		List<Mother> tempOldMothers = oldMotherCollector();
 		Mother[][] tempNewNet = fertilisation();
@@ -400,7 +316,6 @@ public class Model implements Runnable{
 	}
 	
 
-	//uruchamia model w pêtli i zapisuje do pliku zrzut siatki
 	public void runModel(){
 		fileManager.saveUserFile(formatOutputLine(), generationCount - 1);
 		for (int i = 0; i < generationNum - 1; i++) {
@@ -423,7 +338,6 @@ public class Model implements Runnable{
 		tempA = tempA.replace("[", "");
 		tempA = tempA.replace("]", "");
 		tempA = tempA.replace(", ", "");
-//		tempA = tempA.replace("null", "null\r\n");
 		String temp = "Generation: " + (generationCount - 1) + "\r\n" + "Net:\r\n" + tempA + "\r\n";
 		return temp;
 	}

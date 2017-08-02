@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 public class MessageWindow {
 	
 	public void display(String title, String message) {
+		
 		Stage window = new Stage();
 		window.initModality(Modality.APPLICATION_MODAL);
 		window.setTitle(title);
