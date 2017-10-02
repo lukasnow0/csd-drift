@@ -106,12 +106,13 @@ public class ModelNew implements Runnable {
 		if (selectionFactor > 0) {
 			tempWinterFactor += (selectionFactor * (int) Math.round(dip * 100));
 		}
-		if (ThreadLocalRandom.current().nextInt(100) < tempWinterFactor) {
+		if ((ThreadLocalRandom.current().nextInt(100) < tempWinterFactor) || ((generationCount - m.getGeneration()) > 5 )) {
 			//mother dies
 			return false;
+		} else {
+			//mother survives
+			return true;			
 		}
-		//mother survives
-		return true;
 	}
 	
 	protected int getTorusValue(int i) {
@@ -245,7 +246,7 @@ public class ModelNew implements Runnable {
 		return tempOldMothers;
 	}
 	
-	private void oldMothersMigration() {
+	private void oldMothersSwarming() {
 		List<Mother> tempOldMothers = oldMotherCollector();
 		A: while (tempOldMothers.size() > 0) {
 			int index = ThreadLocalRandom.current().nextInt(tempOldMothers.size());
@@ -317,7 +318,7 @@ public class ModelNew implements Runnable {
 		 */
 		eggCreator();
 		generationCount++;
-		oldMothersMigration();
+		oldMothersSwarming();
 		net = eggNet;
 		eggNet = new Mother[netSideSize][netSideSize];
 		collectSpermPool();
