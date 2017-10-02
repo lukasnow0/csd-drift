@@ -2,7 +2,8 @@ package com.csdApp.mainApplication;
 
 
 
-import com.csdApp.model.Model;
+//import com.csdApp.model.Model;
+import com.csdApp.model.ModelNew;
 
 import javafx.application.Platform;
 import javafx.concurrent.Service;
@@ -112,7 +113,8 @@ public class Output {
 	}
 	
 	private static class ModelService extends Service<Integer> {
-		Model model = new Model(allelNum, genNum, netSize, dip, droneDist, swarmDist, projectDir, torus);
+	//	Model model = new Model(allelNum, genNum, netSize, dip, droneDist, swarmDist, projectDir, torus);
+		ModelNew model = new ModelNew(allelNum, genNum, netSize, dip, droneDist, swarmDist, projectDir, torus);
 		Thread modelThread= new Thread(model);
 
 		@Override

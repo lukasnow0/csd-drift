@@ -8,7 +8,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.csdApp.fileManager.FileManager;
 
-public class Model implements Runnable{
+public class ModelNew implements Runnable {
+
 	public static int winterFactor = 20;
 	private int generationCount;
 	private long motherCount;
@@ -21,13 +22,12 @@ public class Model implements Runnable{
 	private int fileSeparator;
 	private FileManager fileManager = null;
 	private volatile Mother[][] net;
+	private Mother[][] eggNet;
 	private AllelPool allelPool;
 	private boolean torus;
 	private String dir;
 	
-
-	
-	public Model(int allelNumber, int generationNumber, int netSideSize, double dip,
+	public ModelNew(int allelNumber, int generationNumber, int netSideSize, double dip,
 			int droneDist, int swarmingDist, String dir, boolean torus){
 		this.generationCount = 1;
 		this.motherCount = 0;
@@ -38,22 +38,19 @@ public class Model implements Runnable{
 		this.droneDist = droneDist;
 		this.swarmingDist = swarmingDist;
 		this.fileSeparator = 100;
-//		if(generationNumber < 2000){
-//			this.fileSeparator = 4;
-//		} else {
-//			this.fileSeparator = (int) Math.ceil((double) generationNumber * 0.002);						
-//		}
 		this.fileManager = new FileManager(dir , "\\simInfo", "\\Generation");
 		this.dir = dir;
 		this.torus = torus;
 		net = new Mother[netSideSize][netSideSize];
+		eggNet = new Mother[netSideSize][netSideSize];
 		allelPool = new AllelPool(allelNumber);
 		innitialNetFill();
+		initialWinterSelection();
+		collectSpermPool();
 		simulationInfoGen();
 	}
 	
-
-	public synchronized void innitialNetFill(){
+	private synchronized void innitialNetFill(){
 		for(int i = 0; i < net.length; i++){
 			for(int j = 0; j < net.length; j++){
 				Allel[] a = randomAllelPair();
@@ -65,17 +62,62 @@ public class Model implements Runnable{
 		generationCount++;
 	}
 	
-
 	private Allel[] randomAllelPair(){
 		Allel[] temp = new Allel[2];
-		do{
+		do {
 			temp[0] = allelPool.getRandomAllel();
 			temp[1] = allelPool.getRandomAllel();
-		}while(temp[0].equals(temp[1]));
+		} while (temp[0].equals(temp[1]));
 		return temp;
 	}
 	
-
+	private void initialWinterSelection() {
+		double tempDip = getDip();
+		setDip(0.0);
+		for(int i = 0; i < net.length; i++){
+			for(int j = 0; j < net.length; j++){
+				if (!winterSelection(net[i][j])){
+					Mother tempMother = new Mother(-1, new Allel(-1), new Allel(-1), -1, i, j);
+					tempMother.setBlankMother(true);
+					tempMother.setYoungMother(false);
+					net[i][j]  = tempMother;
+				}
+			}
+		}
+		setDip(tempDip);
+	}
+	
+	private void cyclicWinterSelection() {
+		for(int i = 0; i < net.length; i++){
+			for(int j = 0; j < net.length; j++){
+				if (!winterSelection(net[i][j])){
+					Mother tempMother = new Mother(-1, new Allel(-1), new Allel(-1), -1, i, j);
+					tempMother.setBlankMother(true);
+					tempMother.setYoungMother(false);
+					net[i][j]  = tempMother;
+				}
+			}
+		}
+	}
+	
+	private boolean winterSelection(Mother m){
+		int tempWinterFactor = winterFactor;
+		int selectionFactor = m.getRedundantAllelInSprermPool();
+		if (selectionFactor > 0) {
+			tempWinterFactor += (selectionFactor * (int) Math.round(dip * 100));
+		}
+		if (ThreadLocalRandom.current().nextInt(100) < tempWinterFactor) {
+			//mother dies
+			return false;
+		}
+		//mother survives
+		return true;
+	}
+	
+	protected int getTorusValue(int i) {
+		return (i % netSideSize + netSideSize) % netSideSize;
+	}
+	
 	private Allel[] neighbouringAllels(Mother m, int amount){
 		int x = m.getX();
 		int y = m.getY();
@@ -151,95 +193,47 @@ public class Model implements Runnable{
 		return temp;
 	}
 	
+	private void collectSpermPool() {
+		for(int i = 0; i < net.length; i++){
+			for(int j = 0; j < net.length; j++){
+				if (net[i][j].isYoungMother()) {
+					Allel[] tempAllels = neighbouringAllels(net[i][j], 15);
+					net[i][j].setSpermPool(tempAllels);
+					net[i][j].setYoungMother(false);
+					net[i][j].redundandAllelCheck();
+				}
+			}
+		}	
+	}
 	
-	public Mother[][] fertilisation(){
-		Mother[][] newNet = new Mother[netSideSize][netSideSize];
+	private void eggCreator() {
 		for(int i = 0; i < net.length; i++){
 			for(int j = 0; j < net.length; j++){
 				if (! net[i][j].isBlankMother()) {
-					if (net[i][j].isYoungMother()) {
-						Allel[] tempAllels = neighbouringAllels(net[i][j], 15);
-						net[i][j].setSpermPool(tempAllels);
-						net[i][j].setYoungMother(false);
-						
-						if (winterSelection(net[i][j])){
-							AllelPool tap;
-							Allel selectedAllelA;
-							Allel selectedAllelB;
-							do {
-								tap = new AllelPool(Arrays.asList(tempAllels));
-								selectedAllelA = tap.getRandomAllel();
-								Allel[] motherAllels = { net[i][j].getAllelOne(), net[i][j].getAllelTwo() };
-								tap.setAllelPool(Arrays.asList(motherAllels));
-								selectedAllelB = tap.getRandomAllel();
-							} while (selectedAllelA.equals(selectedAllelB));
-							Mother temp = new Mother(motherCount, selectedAllelA, selectedAllelB, generationCount, i, j);
-							newNet[i][j] = temp;
-						} else {
-							Mother temp = new Mother(-1, new Allel(-1), new Allel(-1), -1, i, j);
-							temp.setBlankMother(true);
-							newNet[i][j]  = temp;
-						}
-						
-					} else {
-						Allel[] tempAllels = net[i][j].getSpermPool();
-						
-						if (winterSelection(net[i][j])){
-							AllelPool tap;
-							Allel selectedAllelA;
-							Allel selectedAllelB;
-							do {
-								tap = new AllelPool(Arrays.asList(tempAllels));
-								selectedAllelA = tap.getRandomAllel();
-								Allel[] motherAllels = { net[i][j].getAllelOne(), net[i][j].getAllelTwo() };
-								tap.setAllelPool(Arrays.asList(motherAllels));
-								selectedAllelB = tap.getRandomAllel();
-							} while (selectedAllelA.equals(selectedAllelB));
-							Mother temp = new Mother(motherCount, selectedAllelA, selectedAllelB, generationCount, i, j);
-							newNet[i][j] = temp;
-						} else {
-							Mother temp = new Mother(-1, new Allel(-1), new Allel(-1), -1, i, j);
-							temp.setBlankMother(true);
-							newNet[i][j]  = temp;
-						}
-					}
+					Allel[] selectedAllels = allelSelector(net[i][j]);
+					Mother temp = new Mother(motherCount, selectedAllels[0], selectedAllels[1], generationCount, i, j);
+					eggNet[i][j] = temp;
 					motherCount++;
 				} else {
-					newNet[i][j] = net[i][j];
+					eggNet[i][j] = net[i][j];
 				}
 			}
 		}
-		generationCount++;
-		
-		return newNet;
 	}
-
 	
-	public boolean winterSelection(Mother m){
-		int selectionFactor;
-		int tempWF = winterFactor;
-		int tempDip = (int) Math.round(dip * 100);
-		
-//		int redundantAllel = m.redundandAllelCheck();
-//		m.setRedundantAllelInSprermPool(redundantAllel);
-		
-		m.redundandAllelCheck();
-		selectionFactor = m.getRedundantAllelInSprermPool();
-		
-		if(selectionFactor > 0) {
-			tempWF = tempWF + (selectionFactor * tempDip);
-		}
-		int randNum = ThreadLocalRandom.current().nextInt(100);
-		if (randNum < tempWF) {
-			//matka ginie
-			return false;
-		}
-		//matka prze¿ywa
-		return true;
+	private Allel[] allelSelector(Mother m) {
+		AllelPool tempAllelPool = new AllelPool(Arrays.asList(m.getSpermPool()));
+		Allel[] motherAllels = { m.getAllelOne(), m.getAllelTwo() };
+		AllelPool motherAllelPool = new AllelPool(Arrays.asList(motherAllels));
+		Allel[] selectedAllels = new Allel[2];
+		do {
+			selectedAllels[0] = tempAllelPool.getRandomAllel();
+			selectedAllels[1] = motherAllelPool.getRandomAllel();
+		} while (selectedAllels[0].equals(selectedAllels[1]));
+		return selectedAllels;
 	}
-		
 	
-	public List<Mother> oldMotherCollector(){
+	private List<Mother> oldMotherCollector(){
 		List<Mother> tempOldMothers = new ArrayList<>();
 		for(int i = 0; i < netSideSize; i++){
 			for(int j = 0; j < netSideSize; j++){
@@ -251,11 +245,8 @@ public class Model implements Runnable{
 		return tempOldMothers;
 	}
 	
-	
-	public void netSwitch(){
+	private void oldMothersMigration() {
 		List<Mother> tempOldMothers = oldMotherCollector();
-		Mother[][] tempNewNet = fertilisation();
-		net = tempNewNet;
 		A: while (tempOldMothers.size() > 0) {
 			int index = ThreadLocalRandom.current().nextInt(tempOldMothers.size());
 			Mother tempMother = tempOldMothers.get(index);
@@ -267,7 +258,7 @@ public class Model implements Runnable{
 			int bottom = y + swarmingDist;
 			
 			if(torus) {
-				//z torus
+				//torus
 				for (int k = 0; k < 5; k++) {
 					int tempX = ThreadLocalRandom.current().nextInt(left, right);
 					int tempY = ThreadLocalRandom.current().nextInt(top, bottom);
@@ -275,16 +266,16 @@ public class Model implements Runnable{
 						tempX = getTorusValue(tempX);
 						tempY = getTorusValue(tempY);	
 					}
-					if (net[tempX][tempY].isBlankMother()) {
+					if (eggNet[tempX][tempY].isBlankMother()) {
 						tempMother.setX(tempX);
 						tempMother.setY(tempY);
-						net[tempX][tempY] = tempMother;
+						eggNet[tempX][tempY] = tempMother;
 						tempOldMothers.remove(index);
 						continue A;
 					}
 				}
 			} else {
-				// bez torus
+				// non torus
 				while (left < 0) {
 					left++;
 				}
@@ -304,26 +295,39 @@ public class Model implements Runnable{
 					
 					tempX = ThreadLocalRandom.current().nextInt(left, right);
 					tempY = ThreadLocalRandom.current().nextInt(top, bottom);
-					if (net[tempX][tempY].isBlankMother()) {
+					if (eggNet[tempX][tempY].isBlankMother()) {
 						tempMother.setX(tempX);
 						tempMother.setY(tempY);
-						net[tempX][tempY] = tempMother;
+						eggNet[tempX][tempY] = tempMother;
 						tempOldMothers.remove(index);
 						continue A;
 					}
-					
 				}
 			}
-			
 			tempOldMothers.remove(index);
 		}
 	}
-	
 
-	public void runModel(){
+	private void generationCycle() {
+		/*
+		 * 1. new egg creation
+		 * 2. old mothers's migration
+		 * 3. collection of neighboring allels into a spermpool in an young mother
+		 * 4. winter selection 
+		 */
+		eggCreator();
+		generationCount++;
+		oldMothersMigration();
+		net = eggNet;
+		eggNet = new Mother[netSideSize][netSideSize];
+		collectSpermPool();
+		cyclicWinterSelection();
+	}
+
+	private void runModel(){
 		fileManager.saveUserFile(formatOutputLine(), generationCount - 1);
 		for (int i = 0; i < generationNum - 1; i++) {
-			netSwitch();
+			generationCycle();
 			if((i + 2) % fileSeparator == 0){
 				fileManager.saveUserFile(formatOutputLine(), generationCount - 1);				
 			}
@@ -336,7 +340,7 @@ public class Model implements Runnable{
 		}
 		fileManager.saveUserFile(formatOutputLine(), generationCount - 1);
 	}
-	
+
 	private String formatOutputLine(){
 		String tempA = Arrays.deepToString(getNet());
 		tempA = tempA.replace("[", "");
@@ -363,69 +367,28 @@ public class Model implements Runnable{
 		}
 		fileManager.saveSimInfoFile(sb.toString());
 	}
-	
-	protected int getTorusValue(int i) {
-		return (i % netSideSize + netSideSize) % netSideSize;
-	}
-
-	public int getAllelNumber() {
-		return allelNumber;
-	}
-
-	public void setAllelNumber(int allelNumber) {
-		this.allelNumber = allelNumber;
-	}
-
-	public int getGenerationNum() {
-		return generationNum;
-	}
-
-	public void setGenerationNum(int generationNum) {
-		this.generationNum = generationNum;
-	}
-
-	public int getGenerationCount() {
-		return generationCount;
-	}
-
-	public void setGenerationCount(int generationCount) {
-		this.generationCount = generationCount;
-	}
-
-	public long getMotherCount() {
-		return motherCount;
-	}
-
-	public void setMotherCount(long motherCount) {
-		this.motherCount = motherCount;
-	}
-
-	public int getNetSideSize() {
-		return netSideSize;
-	}
-
-	public void setNetSideSize(int netSideSize) {
-		this.netSideSize = netSideSize;
-	}
-
-	public AllelPool getAllelPool() {
-		return allelPool;
-	}
-
-	public void setAllelPool(AllelPool allelPool) {
-		this.allelPool = allelPool;
-	}
 
 	public synchronized Mother[][] getNet() {
 		return net;
 	}
 
-	public void setNet(Mother[][] net) {
-		this.net = net;
-	}
 
+	private double getDip() {
+		return dip;
+	}
+	
+	
+	private void setDip(double dip) {
+		this.dip = dip;
+	}
+	
+	public int getGenerationCount() {
+		return generationCount;
+	}
+	
 	@Override
 	public void run() {
 		runModel();
 	}
+
 }

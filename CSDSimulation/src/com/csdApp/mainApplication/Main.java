@@ -215,11 +215,11 @@ public class Main extends Application {
 			}
 		}
 		
-		if(allelNum > 1 && allelNum < 1001 && genNum > 0 && genNum < 10001 && netSize > 19 && netSize < 1025
-				&& dip >= 0 && dip <= 0.5 && droneDist > 0 && droneDist < 11 && swarmDist > 0 && swarmDist < 11) {
+		if(allelNum > 1 && allelNum < 1001 && genNum > 0 && genNum < 100001 && netSize > 19 && netSize < 1025
+				&& dip >= 0 && dip <= 0.8 && droneDist > 0 && droneDist < 11 && swarmDist > 0 && swarmDist < 11) {
 			return true;			
 		} else {
-			String message = "The value is out of range!\r\nThe ranges for variables are listed below:\r\nAllele number: 2 - 1000, Generation Number: 2 - 10 000, Net side size: 20 - 1024,\r\nDIP: 0.0 - 0.5, Drone distance: 1 - 10, Swarming distance: 1 - 10.";
+			String message = "The value is out of range!\r\nThe ranges for variables are listed below:\r\nAllele number: 2 - 1000, Generation Number: 2 - 100 000, Net side size: 20 - 1024,\r\nDIP: 0.0 - 0.8, Drone distance: 1 - 10, Swarming distance: 1 - 10.";
 			MessageWindow mw = new MessageWindow();
 			mw.display("Input data out of range", message);
 			return false;

@@ -3,7 +3,7 @@ package com.csdApp.model;
 public class Mother{
 	
 	private boolean youngMother;
-	private boolean blankMother = false;
+	private boolean blankMother;
 	private int redundantAllelInSprermPool;
 	private long motherId;
 	private int generation;
@@ -39,6 +39,7 @@ public class Mother{
 				}
 			}
 		}
+		setRedundantAllelInSprermPool(temp);
 		return temp;
 	}
 	
