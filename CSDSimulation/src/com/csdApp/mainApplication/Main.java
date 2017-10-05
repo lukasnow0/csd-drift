@@ -129,7 +129,6 @@ public class Main extends Application {
 		layout.setConstraints(labelDispSim, 0, 7);
 		
 		boxDispSim = new CheckBox();
-		
 		boxDispSim.setDisable(true);
 		layout.setConstraints(boxDispSim, 1, 7);
 		
