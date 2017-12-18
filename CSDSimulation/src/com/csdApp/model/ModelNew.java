@@ -259,8 +259,8 @@ public class ModelNew extends Model{
 			if(torus) {
 				//torus
 				for (int k = 0; k < 5; k++) {
-					int tempX = ThreadLocalRandom.current().nextInt(left, right + 1);
-					int tempY = ThreadLocalRandom.current().nextInt(top, bottom + 1);
+					int tempX = ThreadLocalRandom.current().nextInt(left, right + 1);//not sure if +1 is necessary
+					int tempY = ThreadLocalRandom.current().nextInt(top, bottom + 1);//same here
 					if(tempX < 0 || tempX >= netSideSize || tempY < 0 || tempY >= netSideSize) {
 						tempX = getTorusValue(tempX);
 						tempY = getTorusValue(tempY);	

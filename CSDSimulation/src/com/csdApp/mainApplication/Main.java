@@ -192,8 +192,8 @@ public class Main extends Application {
 				swarmDist = Integer.parseInt(textSwarmDist.getText());
 				projectDir = textProjectDir.getText();
 				
-				if (!projectDir.contains("Output")){
-					projectDir = projectDir.concat("//Output");							
+				if (!projectDir.endsWith("Output")){
+					projectDir = projectDir.concat("//Output");
 				}
 				
 				dispSim = false;
